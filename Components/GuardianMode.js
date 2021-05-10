@@ -78,31 +78,6 @@ export default function GuardianMode() {
     if (!peripheral.name) {
       peripheral.name = 'NO NAME';
     }
-    
-    /**here we find the address and we send the SOS signal */
-
-    Geolocation.getCurrentPosition(
-      (position) => {
-        /**we take the received coordinates and turn them to an address */
-        Geocoder.init("AIzaSyBm3MC9Zv5sYVb23j8zkJWnSM2p12VXlM0")//uses th google API key- we need to hide it
-        Geocoder.from({lat:position.coords.latitude,lng:position.coords.longitude})
-          .then(json => {
-            console.log("json variable is:"+json)
-            const addressComponent = json.results[0].address_components[0];
-            console.log(addressComponent);
-          })
-          .catch(error => console.warn("error in geocoding from coordinates to address: "+error));
-
-      },
-      (error) => {
-        // See error code charts below.
-        console.log("error in finding coordinates: "+error.code, error.message);
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-    );
-
-
-
 
     if (peripheral.name === "ButtonLED") {
       peripherals.set(peripheral.id, peripheral);
@@ -118,13 +93,34 @@ export default function GuardianMode() {
                   .then(async (data) => {
                     console.log("my data: " + data[0])
                     if (data[0] == 90) {
-                      
+
+                      /**here we find the address and we send the SOS signal */
+
+                      Geolocation.getCurrentPosition(
+                        (position) => {
+                          /**we take the received coordinates and turn them to an address */
+                          Geocoder.init("AIzaSyBm3MC9Zv5sYVb23j8zkJWnSM2p12VXlM0")//uses the google API key- we need to hide it
+                          Geocoder.from({ lat: position.coords.latitude, lng: position.coords.longitude })
+                            .then(json => {
+                              
+                              const addressComponent = json.results[0].formatted_address;
+                              console.log(addressComponent);
+                              setSOS("SOS from address:\n" + addressComponent)
+                            })
+                            .catch(error => console.warn("error in geocoding from coordinates to address: " + error));
+
+                        },
+                        (error) => {
+                          // See error code charts below.
+                          console.log("error in finding coordinates: " + error.code, error.message);
+                        },
+                        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+                      );
 
                       /**sending the SOS signal to the close friends/remote guardians*/
                       const msg = data[0].toString()
                       axios.post('https://07lzvzo1sk.execute-api.eu-west-1.amazonaws.com/deploy_1', { "msg": msg })
                         .then((awsData) => {
-                          setSOS("SOS received from: ")//add address!!!!!
                           console.log("this is the status from aws: " + awsData.status)
                           console.log("this is the status text from aws: " + awsData.statusText)
                           if (data[0] != 90)
