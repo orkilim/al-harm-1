@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "780166787402",
+    "project_id": "al-harm-a6e68",
+    "storage_bucket": "al-harm-a6e68.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:780166787402:android:82eb73b2382a94cade91b3",
+        "android_client_info": {
+          "package_name": "com.purereactnative"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "780166787402-s25h1ts6ful0qctenghk3ru8p4e3q190.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD8mOs_kIhhFvLgkDPcVquN8R-8YyyBldM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "780166787402-s25h1ts6ful0qctenghk3ru8p4e3q190.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

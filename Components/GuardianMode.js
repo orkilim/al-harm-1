@@ -4,6 +4,7 @@ import BleManager from 'react-native-ble-manager';
 import axios from 'axios'
 import Geolocation from 'react-native-geolocation-service';
 import Geocoder from 'react-native-geocoding';
+import PushNotification from "react-native-push-notification";
 
 const BleManagerModule = NativeModules.BleManager
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule)
@@ -16,6 +17,7 @@ export default function GuardianMode() {
   const [list, setList] = useState([])
   const [connectionToUser, setConnection] = useState("not connected to a user")
   const [SOSreceived, setSOS] = useState("")
+  const [address, setAddress] = useState("")
 
   const scanAndConnect = () => {
 
@@ -102,8 +104,9 @@ export default function GuardianMode() {
                           Geocoder.init("AIzaSyBm3MC9Zv5sYVb23j8zkJWnSM2p12VXlM0")//uses the google API key- we need to hide it
                           Geocoder.from({ lat: position.coords.latitude, lng: position.coords.longitude })
                             .then(json => {
-                              
+
                               const addressComponent = json.results[0].formatted_address;
+                              setAddress(addressComponent)
                               console.log(addressComponent);
                               setSOS("SOS from address:\n" + addressComponent)
                             })
@@ -119,7 +122,7 @@ export default function GuardianMode() {
 
                       /**sending the SOS signal to the close friends/remote guardians*/
                       const msg = data[0].toString()
-                      axios.post('https://07lzvzo1sk.execute-api.eu-west-1.amazonaws.com/deploy_1', { "msg": msg })
+                      axios.post('https://07lzvzo1sk.execute-api.eu-west-1.amazonaws.com/deploy_1', { "msg": address })
                         .then((awsData) => {
                           console.log("this is the status from aws: " + awsData.status)
                           console.log("this is the status text from aws: " + awsData.statusText)
@@ -190,6 +193,20 @@ export default function GuardianMode() {
 
   }, [])
 
+
+  useEffect(() => {
+    if (address != "") {
+      /** sending a push notification  */
+
+      PushNotification.localNotification({
+        /* Android Only Properties */
+        channelId: "1", // (required) channelId, if the channel 
+        title: "al-harm triggered in your vicinity", // (optional)
+        message: `address: ${address}`, // (required)
+
+      });
+    }
+  }, [address])
 
   return (
     <View style={styles.container}>
