@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Button, Text, View, PermissionsAndroid, NativeEventEmitter, NativeModules } from 'react-native';
-import BleManager from 'react-native-ble-manager';
+import { StyleSheet, Button, Text, View, PermissionsAndroid, NativeEventEmitter, NativeModules, Switch } from 'react-native';
+import BleManager, { stopScan } from 'react-native-ble-manager';
 import axios from 'axios'
 import Geolocation from 'react-native-geolocation-service';
 import Geocoder from 'react-native-geocoding';
@@ -16,19 +16,22 @@ export default function GuardianMode() {
   const peripherals = new Map()
   const [list, setList] = useState([])
   const [connectionToUser, setConnection] = useState("not connected to a user")
+  const [guardian, setGuardian] = useState(false)
   const [SOSreceived, setSOS] = useState("")
   const [address, setAddress] = useState("")
+  const [guardianLabel, setGuardianLabel] = useState("not in")
 
   const scanAndConnect = () => {
-
-    BleManager.scan([], 10, false)
-      .then((peripheral) => {
-        BleManager.getDiscoveredPeripherals()
-      })
-      .catch((err) => {
-        if (err)
-          console.log("error in discovering peripherals: " + err)
-      })
+    if (guardian) {
+      BleManager.scan([], 10, false)
+        .then((peripheral) => {
+          BleManager.getDiscoveredPeripherals()
+        })
+        .catch((err) => {
+          if (err)
+            console.log("error in discovering peripherals: " + err)
+        })
+    }
   }
 
 
@@ -155,21 +158,6 @@ export default function GuardianMode() {
 
 
 
-
-      /*BleManager.retrieveServices(peripheral.id)
-        .then(async (info) => {
-          while(guardianMode)
-          {
-            await BleManager.read(peripheral.id, "12345678-0000-1000-8000-12345678ABCD", "87654321-0000-1000-8000-DCBA87654321")
-                  .then((data) => {
-                    console.log("my data: " + data[0])
-                  })
-                  .catch((err)=>{
-                    if(err)
-                    console.log("blah blah salsa dancing:\n"+err)
-                  })
-          }
-        })*/
     }
   }
 
@@ -208,9 +196,24 @@ export default function GuardianMode() {
     }
   }, [address])
 
+
+  useEffect(() => {
+    if (guardian) {
+      scanAndConnect()
+    }
+    else{
+      BleManager.stopScan()
+    }
+  }, [guardian])
+
+
   return (
     <View style={styles.container}>
-      <Text>You Are in Guardian mode</Text>
+      <Switch value={guardian} onValueChange={() => {
+        setGuardian(guardian ? false : true)
+        setGuardianLabel(guardian ? "in" : "not in")
+      }} ></Switch>
+      <Text>You Are {guardianLabel} Guardian mode</Text>
       <Text>{connectionToUser}</Text>
       <Text>{SOSreceived}</Text>
     </View>
