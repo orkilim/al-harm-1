@@ -5,10 +5,12 @@ import axios from 'axios'
 import Geolocation from 'react-native-geolocation-service';
 import Geocoder from 'react-native-geocoding';
 import PushNotification from "react-native-push-notification";
+import BackgroundTimer from 'react-native-background-timer';
 
 const BleManagerModule = NativeModules.BleManager
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule)
 
+let scanInterval;
 
 export default function GuardianMode() {
 
@@ -199,12 +201,26 @@ export default function GuardianMode() {
 
   useEffect(() => {
     if (guardian) {
-      scanAndConnect()
+      scanInterval=BackgroundTimer.setInterval(() => {
+        // this will be executed every 5 seconds
+        // even when app is the the background
+        PushNotification.localNotification({
+          channelId:"1",
+          title:"hello",
+          message:"world"
+        })
+    }, 5000);
+    
+      //scanAndConnect()
     }
     else{
       BleManager.stopScan()
+      BackgroundTimer.clearInterval(scanInterval);
     }
   }, [guardian])
+
+
+  
 
 
   return (
