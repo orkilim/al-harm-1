@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useLayoutEffect } from 'react';
-import { StyleSheet, View, Text, FlatList, TouchableOpacity, Button  } from 'react-native'
+import { StyleSheet, View, Text, FlatList, TouchableOpacity, Button, PermissionsAndroid  } from 'react-native'
 import { Searchbar } from 'react-native-paper';
 import Contacts from 'react-native-contacts';
+
 
 const styles = StyleSheet.create({
   container:{
@@ -28,7 +29,18 @@ const styles = StyleSheet.create({
 });
 
 
+PermissionsAndroid.request(
+  PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
+  {
+    'title':'Contacts',
+    'message':'we need access to your contacts',
+    'buttonPositive':'sure',
+    'buttonNegative':'nope'
+  }
+)
+
 export default function ContactsPage({ route, navigation }) {
+  const { token, woman, from } = route.params
   const [contacts, setContacts ] = useState([])
   const [filteredDataSource, setFilteredDataSource] = useState([])
   const [closeFriends, setCloseFriends ] = useState([])
@@ -41,9 +53,10 @@ export default function ContactsPage({ route, navigation }) {
       headerRight: () => (
         <Button 
         onPress={() => {
-          navigation.navigate('fetch', {
-            contacts: { ...closeFriends },
-            womanAddress: route.params
+          navigation.navigate('EndSession', {
+            contacts: closeFriends,
+            woman: woman,
+            token: token,
           });
         }}
           title="Finish"
@@ -53,36 +66,44 @@ export default function ContactsPage({ route, navigation }) {
     });
   }, [navigation, closeFriends])
 
-
-  // useEffect(() => {
-  //   (async () => {
-  //     const { status } = await Contacts.requestPermissionsAsync();
-  //     if (status === 'granted') {
-  //       const { data } = await Contacts.getContactsAsync({
-  //         fields: [Contacts.Fields.PhoneNumbers],
-  //       });
-
-  //       if (data.length > 0) {
-  //         const result = data.filter((item) => item.name !== undefined)
-  //         setContacts(result)
-  //         setFilteredDataSource(result)
-  //       }
-  //     }
-  //   })();
-  // }, []);
+  
+    const fetchData = async () => {
+      try {
+        if (route.params === undefined || route.params === null) return
+        await fetch(`https://al-harm.herokuapp.com/woman/getguards?phoneNumber=${woman.phoneNumber}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+        })
+        .then(res => res.json())
+        .then(response => {
+          const data = response.map((curr) => ({
+            name: curr.name,
+            phoneNumber: curr.phone
+          }))
+          setCloseFriends(data)
+          console.log(JSON.stringify(data, null, 4))
+        })
+      } catch(err){
+          console.log(`fetch: ${err}`);
+      }
+    }
+   
 
   useEffect(() => {
     Contacts.getAll().then(contacts => {
       const data = contacts.map((curr) => ({
         id: curr.rawContactId,
         name: curr.givenName ? curr.givenName : null,
-        phone: curr.phoneNumbers && curr.phoneNumbers[0] && curr.phoneNumbers[0].number ? curr.phoneNumbers[0].number : null,
-      })).filter((bla) => bla.phone !== null)
-      console.log(JSON.stringify(data, null, 4))
+        phoneNumber: curr.phoneNumbers && curr.phoneNumbers[0] && curr.phoneNumbers[0].number ? curr.phoneNumbers[0].number : null,
+      })).filter((bla) => bla.phoneNumber !== null)
+      // console.log(JSON.stringify(data, null, 4))
       setContacts(data)
       setFilteredDataSource(data)
+      if (from === 'Login'){
+        fetchData()
+      }
     })
-  })
+  }, [])
 
   
   const updateSearch = (txt) => {
@@ -92,8 +113,7 @@ export default function ContactsPage({ route, navigation }) {
   }
 
   const handlePress = (item) => {
-    console.log('blaallaal')
-    setCloseFriends(closeFriends.some(bla => bla.name === item.name) ? closeFriends.filter((it) => it.name !== item.name) : [ ...closeFriends, { name: item.name, phoneNumber: item.phoneNumbers[0].number }])
+    setCloseFriends(closeFriends.some(bla => bla.name === item.name) ? closeFriends.filter((it) => it.name !== item.name) : [ ...closeFriends, { name: item.name, phoneNumber: item.phoneNumber }])
   }
   
 
@@ -118,7 +138,7 @@ export default function ContactsPage({ route, navigation }) {
       />
     );
   };
-
+  
     return (
         <View>
             <Searchbar

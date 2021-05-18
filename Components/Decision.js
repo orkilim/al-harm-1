@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 
 const Stack = createStackNavigator();
@@ -49,22 +48,19 @@ const Button = ({ text, onPress }) => {
     )
 }
 
-export default function HomePage({ navigation }) {
+export default function Desicion({ navigation }) {
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <View style={styles.txtArea}>
-            <Text style={{ fontSize: 25, marginTop: -20 }}>I'm a:</Text>
-        </View>
       <View style={styles.fixToText}>
             <Button
-                text="Woman"
+                text="Login"
                 onPress={() =>
-                navigation.navigate('Decision')}
+                navigation.navigate('Login')}
             />
             <Button
-                text="Guard"
+                text="Sign Up"
                 onPress={() =>
-                navigation.navigate('GuardSignUp')}
+                navigation.navigate('WomanSignUp')}
             />
       </View>
     </View>

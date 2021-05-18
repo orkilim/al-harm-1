@@ -1,17 +1,68 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Button, TextInput, StyleSheet } from 'react-native'
 
 export default function WomanSignUp({ navigation }) {
-    const INITIAL_Woman_STATE = { address: '', floor: '', apartmentNumber: '', phone_number: '' };
+    const INITIAL_Woman_STATE = { username: '', password: '', phoneNumber: '', address: '' };
     const [woman, setWoman] = useState(INITIAL_Woman_STATE)
+    const [token, setToken] = useState(null);
 
-    const signUp = () => {
-        console.log(woman)
-    }
 
-    
+    const onSubmit = async () => {
+      console.log('woman: ', woman)
+          try {
+              await fetch(`https://al-harm.herokuapp.com/woman/signup`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify ({
+                      "username": woman.username,
+                      "password": woman.password,
+                      "phoneNumber": woman.phoneNumber,
+                      "address": woman.address,
+                  }),
+              })
+              .then(res => res.json())
+              .then(response => {
+                console.log(response)
+                setToken(response.token);
+                if (response.token) {
+                  return navigation.navigate('ContactsPage', {
+                    woman: { ...woman },
+                    token: token,
+                    from: 'Woman',
+                  });
+                }
+                return alert(response.msg)
+              })
+              
+          } catch(err){
+              console.log(`fetch: ${err}`);
+          }
+      }
+
+   
     return (
       <View style={styles.container}>
+        <TextInput
+          style={styles.input}
+          placeholder='username'
+          autoCapitalize="none"
+          placeholderTextColor='white'
+          onChangeText={val => setWoman({ ...woman, username: val })}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder='password'
+          autoCapitalize="none"
+          placeholderTextColor='white'
+          onChangeText={val => setWoman({ ...woman, password: val })}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder='phoneNumber'
+          autoCapitalize="none"
+          placeholderTextColor='white'
+          onChangeText={val => setWoman({ ...woman, phoneNumber: val })}
+        />
         <TextInput
           style={styles.input}
           placeholder='address'
@@ -19,34 +70,10 @@ export default function WomanSignUp({ navigation }) {
           placeholderTextColor='white'
           onChangeText={val => setWoman({ ...woman, address: val })}
         />
-        <TextInput
-          style={styles.input}
-          placeholder='floor'
-          autoCapitalize="none"
-          placeholderTextColor='white'
-          onChangeText={val => setWoman({ ...woman, floor: val })}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder='apartmentNumber'
-          autoCapitalize="none"
-          placeholderTextColor='white'
-          onChangeText={val => setWoman({ ...woman, apartmentNumber: val })}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder='Phone Number'
-          autoCapitalize="none"
-          placeholderTextColor='white'
-          onChangeText={val => setWoman({ ...woman, phone_number: val })}
-        />
         <Button
           title='Next'
-        onPress={() => {
-          /* 1. Navigate to the Details route with params */
-          navigation.navigate('ContactsPage', { ...woman });
-        }}
-          // onPress={()=> navigation.navigate('ContactsPage')}
+          onPress={() => onSubmit()}
+        
         />
       </View>
     )
