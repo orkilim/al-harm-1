@@ -11,6 +11,7 @@ const BleManagerModule = NativeModules.BleManager
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule)
 
 let scanInterval;
+let peripheralConnectedTo=""//the id of the peripheral BLE i am connected to
 
 export default function GuardianMode() {
 
@@ -20,12 +21,11 @@ export default function GuardianMode() {
   const [connectionToUser, setConnection] = useState("not connected to a user")
   const [guardian, setGuardian] = useState(false)
   const [SOSreceived, setSOS] = useState("")
-  const [address, setAddress] = useState("")
-  const [guardianLabel, setGuardianLabel] = useState("not in")
+  const [guardianLabel, setGuardianLabel] = useState("Guardian Mode Disabled")
 
   const scanAndConnect = () => {
     if (guardian) {
-      BleManager.scan([], 10, false)
+      BleManager.scan([], 300, false)
         .then((peripheral) => {
           BleManager.getDiscoveredPeripherals()
         })
@@ -86,10 +86,11 @@ export default function GuardianMode() {
       peripheral.name = 'NO NAME';
     }
 
-    if (peripheral.name === "ButtonLED") {
+    if (peripheral.name === "Alharm") {
       peripherals.set(peripheral.id, peripheral);
       setList(Array.from(peripherals.values()));
-
+      BleManager.stopScan()
+      peripheralConnectedTo=peripheral.id
       BleManager.connect(peripheral.id)
         .then(async () => {
           await BleManager.retrieveServices(peripheral.id)
@@ -109,11 +110,16 @@ export default function GuardianMode() {
                           Geocoder.init("AIzaSyBm3MC9Zv5sYVb23j8zkJWnSM2p12VXlM0")//uses the google API key- we need to hide it
                           Geocoder.from({ lat: position.coords.latitude, lng: position.coords.longitude })
                             .then(json => {
-
+                              json.results[0]
                               const addressComponent = json.results[0].formatted_address;
-                              setAddress(addressComponent)
                               console.log(addressComponent);
                               setSOS("SOS from address:\n" + addressComponent)
+                              PushNotification.localNotification({
+                                /* Android Only Properties */
+                                channelId: "1", 
+                                title: "al-harm triggered in your vicinity",
+                                message: `address: ${addressComponent}`
+                              })
                             })
                             .catch(error => console.warn("error in geocoding from coordinates to address: " + error));
 
@@ -127,17 +133,9 @@ export default function GuardianMode() {
 
                       /**sending the SOS signal to the close friends/remote guardians*/
                       const msg = data[0].toString()
-                      axios.post('https://07lzvzo1sk.execute-api.eu-west-1.amazonaws.com/deploy_1', { "msg": address })
-                        .then((awsData) => {
-                          console.log("this is the status from aws: " + awsData.status)
-                          console.log("this is the status text from aws: " + awsData.statusText)
-                          if (data[0] != 90)
-                            return;
-                        })
-                        .catch((awsErr) => {
-                          if (awsErr)
-                            console.log("this is aws error: " + awsErr)
-                        })
+                      
+
+
                     }
 
                   })
@@ -178,43 +176,31 @@ export default function GuardianMode() {
     bleManagerEmitter.addListener('BleManagerDisconnectPeripheral', handleDisconnectedPeripheral);
     bleManagerEmitter.addListener('BleManagerDidUpdateValueForCharacteristic', handleUpdateValueForCharacteristic);
 
-    scanAndConnect()
+    //scanAndConnect()
 
 
   }, [])
 
 
   useEffect(() => {
-    if (address != "") {
-      /** sending a push notification  */
-
-      PushNotification.localNotification({
-        /* Android Only Properties */
-        channelId: "1", // (required) channelId, if the channel 
-        title: "al-harm triggered in your vicinity", // (optional)
-        message: `address: ${address}`, // (required)
-
-      });
-    }
-  }, [address])
-
-
-  useEffect(() => {
     if (guardian) {
       scanInterval=BackgroundTimer.setInterval(() => {
-        // this will be executed every 5 seconds
+        // this will be executed every 5 minutes
         // even when app is the the background
         PushNotification.localNotification({
           channelId:"1",
-          title:"hello",
-          message:"world"
+          title:"Scanning for al-harm",
+          message:"Scanning for al-harm ble devices"
         })
-    }, 5000);
+    }, 300000);
     
-      //scanAndConnect()
+      scanAndConnect()
     }
     else{
       BleManager.stopScan()
+      BleManager.disconnect(peripheralConnectedTo)
+      setConnection("not connected to user")
+      setSOS("")
       BackgroundTimer.clearInterval(scanInterval);
     }
   }, [guardian])
@@ -227,9 +213,9 @@ export default function GuardianMode() {
     <View style={styles.container}>
       <Switch value={guardian} onValueChange={() => {
         setGuardian(guardian ? false : true)
-        setGuardianLabel(guardian ? "in" : "not in")
+        setGuardianLabel(guardian ? "Guardian Mode Disabled" : "Guardian Mode Active")
       }} ></Switch>
-      <Text>You Are {guardianLabel} Guardian mode</Text>
+      <Text>{guardianLabel}</Text>
       <Text>{connectionToUser}</Text>
       <Text>{SOSreceived}</Text>
     </View>
@@ -246,3 +232,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
+
+
+
+/*axios.post('https://07lzvzo1sk.execute-api.eu-west-1.amazonaws.com/deploy_1', { "msg": address })
+                        .then((awsData) => {
+                          console.log("this is the status from aws: " + awsData.status)
+                          console.log("this is the status text from aws: " + awsData.statusText)
+                          if (data[0] != 90)
+                            return;
+                        })
+                        .catch((awsErr) => {
+                          if (awsErr)
+                            console.log("this is aws error: " + awsErr)
+                        })*/

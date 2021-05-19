@@ -64,7 +64,7 @@ export default function App() {
 
   useEffect(()=>{
 
-    PushNotification.createChannel({channelId:"1",channelName:"test"})
+    PushNotification.createChannel({channelId:"1",channelName:"al-harm"})
 
     
 

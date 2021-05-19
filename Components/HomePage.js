@@ -57,14 +57,14 @@ export default function HomePage({ navigation }) {
         </View>
       <View style={styles.fixToText}>
             <Button
-                text="Woman"
+                text="User"
                 onPress={() =>
                 navigation.navigate('Decision')}
             />
             <Button
-                text="Guard"
+                text="Guardian"
                 onPress={() =>
-                navigation.navigate('GuardSignUp')}
+                navigation.navigate('GuardianMode')}
             />
       </View>
     </View>
