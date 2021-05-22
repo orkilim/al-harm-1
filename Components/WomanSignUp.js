@@ -44,28 +44,28 @@ export default function WomanSignUp({ navigation }) {
       <View style={styles.container}>
         <TextInput
           style={styles.input}
-          placeholder='username'
+          placeholder='Allina Baker'
           autoCapitalize="none"
           placeholderTextColor='white'
           onChangeText={val => setWoman({ ...woman, username: val })}
         />
         <TextInput
           style={styles.input}
-          placeholder='password'
+          placeholder='********'
           autoCapitalize="none"
           placeholderTextColor='white'
           onChangeText={val => setWoman({ ...woman, password: val })}
         />
         <TextInput
           style={styles.input}
-          placeholder='phoneNumber'
+          placeholder='+972526777829'
           autoCapitalize="none"
           placeholderTextColor='white'
           onChangeText={val => setWoman({ ...woman, phoneNumber: val })}
         />
         <TextInput
           style={styles.input}
-          placeholder='address'
+          placeholder='Has 1 apt.7 Ramat Gan'
           autoCapitalize="none"
           placeholderTextColor='white'
           onChangeText={val => setWoman({ ...woman, address: val })}
