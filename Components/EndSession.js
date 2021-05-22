@@ -8,6 +8,7 @@ import Geocoder from 'react-native-geocoding';
 import SoundRecorder from 'react-native-sound-recorder';
 import PushNotification from 'react-native-push-notification';
 import SoundPlayer from 'react-native-sound-player';
+import fs from 'react-native-fs'
 
 const BleManagerModule = NativeModules.BleManager
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule)
@@ -74,9 +75,46 @@ export default function EndSession({ route, navigation }) {
   }, [])
 
 
+  useEffect(()=>{
+    askStoragePermission()
+    const path=fs.DocumentDirectoryPath+"/al_harm_recording.mp4"
+    fs.exists(path)
+    .then((fileExist)=>{
+      if(fileExist)
+      {
+        setPlayVisibility(true)
+      }
+      
+    })
+    
+    
+  },[])
+
+
   //--------functions section----------
 
   //function to scan for ble al-harm devices and connect with them
+
+  const askStoragePermission=async ()=>{
+    try {
+      const permissionStatus = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+        {
+          title: "permission for storage",
+          message: "please grant access to storage",
+          buttonPositive: "sure",
+          buttonNegative: "nope"
+        }
+      )
+      console.log("permission data is:\n" + permissionStatus)
+      
+        
+    }
+    catch (err) {
+      console.log("problem with permission:\n" + err)
+    }
+  }
+
   const scanAndConnect = () => {
     BleManager.scan([], 10, false)
       .then((peripheral) => {
@@ -195,7 +233,7 @@ export default function EndSession({ route, navigation }) {
 
                           /**starting a new recording and a notification interval to remind that it is recording */
 
-                          SoundRecorder.start(SoundRecorder.PATH_CACHE + "/al_harm_recording.mp4")
+                          SoundRecorder.start(fs.DocumentDirectoryPath + "/al_harm_recording.mp4")
                             .then(function () {
                               console.log('started recording');
                               //recordingCounter++;
@@ -269,7 +307,7 @@ export default function EndSession({ route, navigation }) {
   }
 
   const playRec = () => {
-    SoundPlayer.playUrl(pathToRecording)
+    SoundPlayer.playUrl(fs.DocumentDirectoryPath+"/al_harm_recording.mp4")
   }
 
   //-------possible rendering options for the EndSession component-----

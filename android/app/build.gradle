@@ -187,6 +187,8 @@ android {
 
 dependencies {
 
+    implementation project(':react-native-fs')
+
     compile project(':react-native-sound-recorder')
 
     implementation platform('com.google.firebase:firebase-bom:27.1.0')
