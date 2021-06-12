@@ -332,6 +332,7 @@ export default function EndSession({ route, navigation }) {
         <Text style={{ fontSize: 40, marginTop: -20, textAlign: 'center' }}>Data Saved Successully!</Text>
         <View style={styles.fixToText}>
           <Button title="send sms to contacts" onPress={() => { twilio() }} ></Button>
+          <Button title="See Statistics" onPress={() => navigation.navigate('Statistics')} ></Button>
           <Text>{connectionToUser}</Text>
           <View style={{ display: stopRecordingButtonVisibility ? "flex" : "none" }} >
             <Button title="stop recording" onPress={() => { stopRec() }}></Button>
